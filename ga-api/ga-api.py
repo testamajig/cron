@@ -1,6 +1,4 @@
 #!/usr/bin/python
-
-
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2012 Google Inc.
@@ -44,6 +42,11 @@ from oauth2client.file import Storage
 from oauth2client.client import AccessTokenRefreshError
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.tools import run
+
+
+ga_account = 'ga:15803463'
+if len(sys.argv) > 1:
+    ga_account = int( sys.argv[1] )
 
 
 FLAGS = gflags.FLAGS
@@ -115,26 +118,11 @@ def main(argv):
   try:
 
     #print "Success! Now add code here."
-
     import datetime
     import time
-    import pytz
-    tz = pytz.timezone("US/Pacific")
-    ga_account = 'ga:15803463'
-
-
-    #delay = 3600
-    delay = 600
-    #while True:
-    #today = tz.localize(datetime.datetime.now())
-    #yesterday = today - datetime.timedelta(days = 1)
-    #tstamp = today
 
     today = datetime.datetime.utcnow() - datetime.timedelta(hours=7)
-    #today = datetime.datetime.utcnow()
     tstamp = today
-    #print today
-    #print today.strftime('%s')
 
     try:
         api_query = service.data().ga().get(
@@ -144,9 +132,7 @@ def main(argv):
             metrics='ga:visits',
             dimensions='ga:hour'
         )
-        #print api_query
         results = api_query.execute()
-        #print json.dumps(results, indent=4)
 
         output_file_base = '/home/cron/files-for-graphite/'
         output_file = "%s%s-visits-%s.txt" % (
@@ -154,10 +140,10 @@ def main(argv):
             ga_account.replace(':','-'), 
             tstamp.strftime('%Y-%m-%d')
         )
-        #print 'writing to '+ output_file
+
         output = open(output_file, 'w')
         for row in results['rows']:
-            epoch = datetime.datetime(
+            dt = datetime.datetime(
                 int(tstamp.strftime('%Y')), 
                 int(tstamp.strftime('%m')),
                 int(tstamp.strftime('%d')),
@@ -165,15 +151,13 @@ def main(argv):
                 0,
                 0
             )
-            # add 7 hours of seconds 
-            foo = int(epoch.strftime('%s')) + 25200
-            #foo = epoch.strftime('%s')
+            # add 7 hours of seconds because I don't understand datetime yet
+            epoch = int(dt.strftime('%s')) + 25200
             visits = row[1]
             if int(visits) > 0:
-                output.write("web.ga.%s.visits %s %s\n" % (ga_account.split(':')[1], visits, foo))
+                output.write("web.ga.%s.visits %s %s\n" % (ga_account.split(':')[1], visits, epoch))
 
         output.close()
-        #time.sleep(delay)
     except:
         error = 1
 
