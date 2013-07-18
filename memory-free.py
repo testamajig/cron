@@ -30,14 +30,14 @@ if len(sys.argv) > 1:
 def get_memfree():
   # For more details, "man proc" and "man uptime"  
     if platform.system() == "Linux":
-        free = subprocess.Popen(["free", "-m"], stdout=subprocess.PIPE).communicate()[0]
-        free = free.strip().split('\n')
-        foo = 0
+        cmd = subprocess.Popen(["free", "-m"], stdout=subprocess.PIPE).communicate()[0]
+        free = cmd.strip().split('\n')
+        val = 0
         for a in free:
             b = a.split()
             if b[0].startswith('-'):
-                foo = b[3]
-                return foo
+                val = b[3]
+                return val
 
 sock = socket()
 try:
